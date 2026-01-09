@@ -20,6 +20,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 {
@@ -36,6 +37,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
         private static readonly Regex AniDbUrlRegex = new Regex(@"https?://anidb.net/\w+(/[0-9]+)? \[(?<name>[^\]]*)\]", RegexOptions.Compiled);
         private static readonly Regex _errorRegex = new(@"<error code=""[0-9]+"">[a-zA-Z]+</error>", RegexOptions.Compiled);
         private readonly IApplicationPaths _appPaths;
+        private readonly ILogger<AniDbSeriesProvider> _logger;
 
         private readonly Dictionary<string, PersonKind> _typeMappings = new()
         {
@@ -44,9 +46,10 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             {"Chief Animation Direction", PersonKind.Director}
         };
 
-        public AniDbSeriesProvider(IApplicationPaths appPaths)
+        public AniDbSeriesProvider(IApplicationPaths appPaths, ILogger<AniDbSeriesProvider> logger)
         {
             _appPaths = appPaths;
+            _logger = logger;
             TitleMatcher = AniDbTitleMatcher.DefaultInstance;
             Current = this;
         }
@@ -82,8 +85,15 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 
             result.Item.ProviderIds.Add(ProviderNames.AniDb, animeId);
 
-            var seriesDataPath = await GetSeriesData(_appPaths, animeId, cancellationToken);
-            await FetchSeriesInfo(result, seriesDataPath, info.MetadataLanguage ?? "en").ConfigureAwait(false);
+            try
+            {
+                var seriesDataPath = await GetSeriesData(_appPaths, animeId, cancellationToken);
+                await FetchSeriesInfo(result, seriesDataPath, info.MetadataLanguage ?? "en").ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch AniDB series info for {AnimeId}", animeId);
+            }
 
             return result;
         }
