@@ -499,6 +499,34 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                                 }
                             }
                             break;
+                        case "43": // IMDb
+                            while (reader.Read())
+                            {
+                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
+                                {
+                                    var imdbId = reader.ReadElementContentAsString();
+                                    if (!string.IsNullOrEmpty(imdbId))
+                                    {
+                                        series.ProviderIds[ProviderNames.IMDb] = imdbId;
+                                    }
+                                }
+                            }
+                            break;
+                        case "44": // TheMovieDb
+                            while (reader.Read())
+                            {
+                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
+                                {
+                                    var theMovieDbId = reader.ReadElementContentAsString();
+                                    if (!string.IsNullOrEmpty(theMovieDbId) && theMovieDbId != "tv")
+                                    {
+                                        series.ProviderIds[ProviderNames.TheMovieDb] = theMovieDbId;
+                                        // break after finding the first one.
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
                     }
                 }
             }
