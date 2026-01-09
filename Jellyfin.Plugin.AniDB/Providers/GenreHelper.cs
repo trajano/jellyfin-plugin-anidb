@@ -188,8 +188,9 @@ namespace Jellyfin.Plugin.AniDB.Providers
             "Zombie",
         };
 
-        private static readonly Dictionary<string, string> IgnoreIfPresent = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> IgnoreIfPresent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
+            {"Absurdist humour", "Comedy"},
             {"Psychological Thriller", "Thriller"}
         };
 
