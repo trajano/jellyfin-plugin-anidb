@@ -126,7 +126,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             try
             {
                 var now = DateTime.UtcNow;
-                if (bannedLastDetected > now.AddHours(-2))
+                if (bannedLastDetected > now.AddHours(-2) && await AniDbSeriesProvider.GetExistingSeriesData(_configurationManager.ApplicationPaths, seriesId, cancellationToken) == null)
                 {
                     return null;
                 }

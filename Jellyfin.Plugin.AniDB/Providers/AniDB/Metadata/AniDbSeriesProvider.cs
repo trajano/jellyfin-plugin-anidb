@@ -221,7 +221,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
 
-        private async Task<string> GetExistingSeriesData(IApplicationPaths appPaths, string seriesId, CancellationToken cancellationToken)
+        public static async Task<string> GetExistingSeriesData(IApplicationPaths appPaths, string seriesId, CancellationToken cancellationToken)
         {
             var dataPath = GetSeriesDataPath(appPaths, seriesId);
             var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
