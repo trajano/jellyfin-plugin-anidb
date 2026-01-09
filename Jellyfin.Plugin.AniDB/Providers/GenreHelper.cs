@@ -13,7 +13,8 @@ namespace Jellyfin.Plugin.AniDB.Providers
         private static readonly Dictionary<string, string> GenreMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {"Action", "Action"},
-            {"Advanture", "Adventure"},
+            {"Alient", "Science Fiction"},
+            {"Adventure", "Adventure"},
             {"Black comedy", "Comedy"},
             {"Contemporary Fantasy", "Fantasy"},
             {"Comedy", "Comedy"},
@@ -32,6 +33,7 @@ namespace Jellyfin.Plugin.AniDB.Providers
             {"Magic", "Fantasy"},
             {"Martial Arts", "Action"},
             {"Mahou Shoujo", "Fantasy"},
+            {"Mecha", "Science Fiction"},
             {"Music", "Music"},
             {"Mystery", "Mystery"},
             {"Parody", "Comedy"},
@@ -40,14 +42,9 @@ namespace Jellyfin.Plugin.AniDB.Providers
             {"Romance", "Romance"},
             {"Sci-Fi", "Science Fiction"},
             {"Science Fiction", "Science Fiction"},
-            {"Slice of Life", "Slice of Life"},
             {"Soft Science Fiction", "Science Fiction"},
             {"Space", "Science Fiction"},
-            {"Supernatural", "Supernatural"},
             {"Thriller", "Thriller"},
-            {"Tragedy", "Tragedy"},
-            {"Witch", "Supernatural"},
-            {"Vampire", "Supernatural"},
             {"War", "War"},
             {"Western", "Western"},
         };
