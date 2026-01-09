@@ -44,7 +44,8 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             {"Direction", PersonKind.Director},
             {"Music", PersonKind.Composer},
             {"Chief Animation Direction", PersonKind.Director},
-            {"Original Work", PersonKind.Creator}
+            {"Original Work", PersonKind.Creator},
+            {"Character Design", PersonKind.Creator}
         };
 
         private DateTime bannedLastDetected = DateTime.MinValue;
