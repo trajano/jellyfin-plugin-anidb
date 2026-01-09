@@ -23,6 +23,7 @@ namespace Jellyfin.Plugin.AniDB.Providers
             {"Drama", "Drama"},
             {"Ecchi", "Ecchi"},
             {"Fantasy", "Fantasy"},
+            {"Future", "Sci-Fi"},
             {"Harem", "Harem"},
             {"Hentai", "Adult"},
             {"Historical", "Period & Historical"},
