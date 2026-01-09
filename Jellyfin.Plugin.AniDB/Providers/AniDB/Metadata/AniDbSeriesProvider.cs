@@ -123,7 +123,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 
         private async Task ApplyFallbackTitlesAsync(string animeId, MetadataResult<Series> result, string desiredLanguage, Exception ex)
         {
-            using var fallbackTitles = await Equals_check.XmlFindTitleById(animeId).ConfigureAwait(false);
+            using var fallbackTitles = await Equals_check.FindTitlesXmlById(animeId).ConfigureAwait(false);
             if (fallbackTitles == null)
             {
                 if (ex != null)

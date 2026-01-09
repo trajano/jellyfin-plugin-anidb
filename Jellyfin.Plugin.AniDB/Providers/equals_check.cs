@@ -156,9 +156,12 @@ namespace Jellyfin.Plugin.AniDB.Providers
         }
 
         /// <summary>
-        /// Returns an XML reader containing the titles given the animeId
+        /// Returns an XML reader for the title entries inside the specified animeId.
         /// </summary>
-        public static Task<XmlReader> XmlFindTitleById(string animeId)
+        /// <param name="animeId">AniDB anime identifier.</param>
+        /// <returns>An XML reader scoped to the titles for the specified animeId.</returns>
+        /// <exception cref="InvalidDataException">Thrown when the matching anime entry is malformed.</exception>
+        public static Task<XmlReader> FindTitlesXmlById(string animeId)
         {
             string xml = File.ReadAllText(GetAnidbXml());
             int animeStart = xml.IndexOf($"<anime aid=\"{animeId}\"", StringComparison.Ordinal);
@@ -170,13 +173,13 @@ namespace Jellyfin.Plugin.AniDB.Providers
             int animeOpenEnd = xml.IndexOf('>', animeStart);
             if (animeOpenEnd < 0)
             {
-                return Task.FromResult<XmlReader>(null);
+                throw new InvalidDataException($"AniDB XML entry for id {animeId} is missing the opening tag end.");
             }
 
             int animeEnd = xml.IndexOf("</anime>", animeOpenEnd, StringComparison.Ordinal);
             if (animeEnd < 0)
             {
-                return Task.FromResult<XmlReader>(null);
+                throw new InvalidDataException($"AniDB XML entry for id {animeId} is missing the closing tag.");
             }
 
             int titlesStart = animeOpenEnd + 1;
