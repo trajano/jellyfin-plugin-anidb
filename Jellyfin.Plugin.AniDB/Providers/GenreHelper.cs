@@ -11,12 +11,14 @@ namespace Jellyfin.Plugin.AniDB.Providers
     {
         private static readonly Dictionary<string, string> GenreMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
+            {"Absurdist humour", "Comedy"},
             {"Action", "Action"},
             {"Advanture", "Adventure"},
             {"Contemporary Fantasy", "Fantasy"},
             {"Comedy", "Comedy"},
             {"Dark Fantasy", "Fantasy"},
             {"Dementia", "Psychological Thriller"},
+            {"Demon", "Supernatural"},
             {"Demons", "Fantasy"},
             {"Drama", "Drama"},
             {"Ecchi", "Ecchi"},

@@ -49,6 +49,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             268, // warthog
             269, // python
             289, // string necklace
+            2628, // fictional location
         };
         private static readonly Regex AniDbUrlRegex = new Regex(@"https?://anidb.net/\w+(/[0-9]+)? \[(?<name>[^\]]*)\]", RegexOptions.Compiled);
         private static readonly Regex _errorRegex = new(@"<error code=""[0-9]+"">[a-zA-Z]+</error>", RegexOptions.Compiled);
