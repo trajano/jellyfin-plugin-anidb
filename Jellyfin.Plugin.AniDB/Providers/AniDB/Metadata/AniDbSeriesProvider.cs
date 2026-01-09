@@ -92,12 +92,21 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             var desiredLanguage = info.MetadataLanguage ?? "en";
             try
             {
+                var now = DateTime.UtcNow;
+                if (bannedLastDetected > now.AddHours(-2))
+                {
+                    throw new InvalidOperationException("AniDB ban detected within the last 2 hours.");
+                }
                 var seriesDataPath = await GetSeriesData(_appPaths, animeId, cancellationToken);
                 await FetchSeriesInfo(result, seriesDataPath, desiredLanguage).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to fetch AniDB series info for {AnimeId}", animeId);
+                if (ex.Message != null && ex.Message.IndexOf("<error code=\"500\">banned</error>", StringComparison.Ordinal) >= 0)
+                {
+                    bannedLastDetected = DateTime.UtcNow;
+                }
                 using (var fallbackTitles = await Equals_check.XmlFindTitleById(animeId).ConfigureAwait(false))
                 {
                     if (fallbackTitles == null)
