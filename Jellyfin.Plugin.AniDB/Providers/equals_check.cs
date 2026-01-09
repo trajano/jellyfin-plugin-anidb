@@ -155,6 +155,76 @@ namespace Jellyfin.Plugin.AniDB.Providers
         }
 
         /// <summary>
+        /// Find the official title in the desired language given the anime Id
+        /// </summary>
+        public async static Task<string> XmlFindTitleById(string animeId, string desiredLanguage = "en")
+        {
+            string xml = File.ReadAllText(GetAnidbXml());
+            int animeStart = xml.IndexOf($"<anime aid=\"{animeId}\"", StringComparison.Ordinal);
+            if (animeStart < 0)
+            {
+                return "";
+            }
+
+            int animeOpenEnd = xml.IndexOf('>', animeStart);
+            if (animeOpenEnd < 0)
+            {
+                return "";
+            }
+
+            int animeEnd = xml.IndexOf("</anime>", animeOpenEnd, StringComparison.Ordinal);
+            if (animeEnd < 0)
+            {
+                return "";
+            }
+
+            string firstOfficialTitle = "";
+            string langToken = $"xml:lang=\"{desiredLanguage}\"";
+            int pos = animeOpenEnd + 1;
+            while (true)
+            {
+                int titleStart = xml.IndexOf("<title", pos, StringComparison.Ordinal);
+                if (titleStart < 0 || titleStart >= animeEnd)
+                {
+                    break;
+                }
+
+                int titleTagEnd = xml.IndexOf('>', titleStart);
+                if (titleTagEnd < 0 || titleTagEnd >= animeEnd)
+                {
+                    break;
+                }
+
+                int titleClose = xml.IndexOf("</title>", titleTagEnd + 1, StringComparison.Ordinal);
+                if (titleClose < 0 || titleClose > animeEnd)
+                {
+                    break;
+                }
+
+                bool isOfficial = xml.IndexOf("type=\"official\"", titleStart, titleTagEnd - titleStart, StringComparison.Ordinal) >= 0;
+                if (isOfficial)
+                {
+                    string titleText = xml.Substring(titleTagEnd + 1, titleClose - titleTagEnd - 1);
+                    if (string.IsNullOrEmpty(firstOfficialTitle))
+                    {
+                        firstOfficialTitle = titleText;
+                    }
+
+                    bool isDesiredLang = xml.IndexOf(langToken, titleStart, titleTagEnd - titleStart, StringComparison.Ordinal) >= 0;
+                    if (isDesiredLang)
+                    {
+                        return titleText;
+                    }
+                }
+
+                pos = titleClose + "</title>".Length;
+            }
+
+            return firstOfficialTitle;
+        }
+
+
+        /// <summary>
         /// Finds an AniDB ID for name
         /// </summary>
         public async static Task<string> XmlFindId(string name, CancellationToken cancellationToken, int x_ = 0)

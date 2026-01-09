@@ -84,15 +84,25 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             result.HasMetadata = true;
 
             result.Item.ProviderIds.Add(ProviderNames.AniDb, animeId);
-
+            
+            var desiredLanguage = info.MetadataLanguage ?? "en";
             try
             {
                 var seriesDataPath = await GetSeriesData(_appPaths, animeId, cancellationToken);
-                await FetchSeriesInfo(result, seriesDataPath, info.MetadataLanguage ?? "en").ConfigureAwait(false);
+                await FetchSeriesInfo(result, seriesDataPath, desiredLanguage).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to fetch AniDB series info for {AnimeId}", animeId);
+                var fallbackTitle = await Equals_check.XmlFindTitleById(animeId, desiredLanguage).ConfigureAwait(false);
+                if (string.IsNullOrEmpty(fallbackTitle))
+                {
+                    result.HasMetadata = false;
+                }
+                else
+                {
+                    result.Item.Name = fallbackTitle;
+                }
             }
 
             return result;
