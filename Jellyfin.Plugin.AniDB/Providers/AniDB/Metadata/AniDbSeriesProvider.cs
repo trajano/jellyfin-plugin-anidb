@@ -94,16 +94,22 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to fetch AniDB series info for {AnimeId}", animeId);
-                var fallbackTitle = await Equals_check.XmlFindTitleById(animeId, desiredLanguage).ConfigureAwait(false);
-                if (string.IsNullOrEmpty(fallbackTitle))
+                using (var fallbackTitles = await Equals_check.XmlFindTitleById(animeId).ConfigureAwait(false))
                 {
-                    _logger.LogWarning(ex, "Unable to find fallback title for {AnimeId}", animeId);
-                    result.HasMetadata = false;
-                }
-                else
-                {
-                    _logger.LogInformation(ex, "Using fallback title {FallbackTitle} for {AnimeId}", fallbackTitle, animeId);
-                    result.Item.Name = fallbackTitle;
+                    if (fallbackTitles == null)
+                    {
+                        _logger.LogWarning(ex, "Unable to find fallback title for {AnimeId}", animeId);
+                        result.HasMetadata = false;
+                    }
+                    else
+                    {
+                        var appliedTitles = await ApplyTitlesAsync(fallbackTitles, result.Item, desiredLanguage, true).ConfigureAwait(false);
+                        if (!appliedTitles)
+                        {
+                            _logger.LogWarning(ex, "Unable to find fallback title for {AnimeId}", animeId);
+                            result.HasMetadata = false;
+                        }
+                    }
                 }
             }
 
@@ -251,19 +257,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                             case "titles":
                                 using (var subtree = reader.ReadSubtree())
                                 {
-                                    var (title, originalTitle) = await ParseTitle(subtree, preferredMetadataLangauge).ConfigureAwait(false);
-                                    if (!string.IsNullOrEmpty(title))
-                                    {
-                                        series.Name = Plugin.Instance.Configuration.AniDbReplaceGraves
-                                            ? title.Replace('`', '\'')
-                                            : title;
-                                    }
-                                    if (!string.IsNullOrEmpty(originalTitle))
-                                    {
-                                        series.OriginalTitle = Plugin.Instance.Configuration.AniDbReplaceGraves
-                                            ? originalTitle.Replace('`', '\'')
-                                            : originalTitle;
-                                    }
+                                    await ApplyTitlesAsync(subtree, series, preferredMetadataLangauge, false).ConfigureAwait(false);
                                 }
 
                                 break;
@@ -522,7 +516,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "title")
+                if (reader.NodeType == XmlNodeType.Element && (reader.Name == "title" || reader.Name == "anime"))
                 {
                     var language = reader.GetAttribute("xml:lang");
                     var type = reader.GetAttribute("type");
@@ -541,6 +535,41 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             string originalTitle = titles.Localize(Plugin.Instance.Configuration.OriginalTitlePreference, preferredMetadataLangauge).Name;
 
             return (title, originalTitle);
+        }
+
+        private async Task<bool> ApplyTitlesAsync(
+            XmlReader reader,
+            Series series,
+            string preferredMetadataLangauge,
+            bool useOriginalAsFallback)
+        {
+            var (title, originalTitle) = await ParseTitle(reader, preferredMetadataLangauge).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(title) && string.IsNullOrEmpty(originalTitle))
+            {
+                return false;
+            }
+
+            if (Plugin.Instance.Configuration.AniDbReplaceGraves)
+            {
+                title = title?.Replace('`', '\'');
+                originalTitle = originalTitle?.Replace('`', '\'');
+            }
+
+            if (!string.IsNullOrEmpty(title))
+            {
+                series.Name = title;
+            }
+            else if (useOriginalAsFallback && !string.IsNullOrEmpty(originalTitle))
+            {
+                series.Name = originalTitle;
+            }
+
+            if (!string.IsNullOrEmpty(originalTitle))
+            {
+                series.OriginalTitle = originalTitle;
+            }
+
+            return true;
         }
 
         private async Task ParseCreators(MetadataResult<Series> series, XmlReader reader)
