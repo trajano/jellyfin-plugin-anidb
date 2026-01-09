@@ -97,7 +97,9 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                 var now = DateTime.UtcNow;
                 if (bannedLastDetected > now.AddHours(-2))
                 {
-                    throw new InvalidOperationException("AniDB ban detected within the last 2 hours.");
+                    _logger.LogWarning("AniDB ban detected within the last 2 hours. Falling back to title-only metadata for {AnimeId}", animeId);
+                    await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, null).ConfigureAwait(false);
+                    return result;
                 }
                 var seriesDataPath = await GetSeriesData(_appPaths, animeId, cancellationToken);
                 await FetchSeriesInfo(result, seriesDataPath, desiredLanguage).ConfigureAwait(false);
@@ -109,26 +111,44 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                 {
                     bannedLastDetected = DateTime.UtcNow;
                 }
-                using (var fallbackTitles = await Equals_check.XmlFindTitleById(animeId).ConfigureAwait(false))
-                {
-                    if (fallbackTitles == null)
-                    {
-                        _logger.LogWarning(ex, "Unable to find fallback title for {AnimeId}", animeId);
-                        result.HasMetadata = false;
-                    }
-                    else
-                    {
-                        var appliedTitles = await ApplyTitlesAsync(fallbackTitles, result.Item, desiredLanguage, true).ConfigureAwait(false);
-                        if (!appliedTitles)
-                        {
-                            _logger.LogWarning(ex, "Unable to find fallback title for {AnimeId}", animeId);
-                            result.HasMetadata = false;
-                        }
-                    }
-                }
+                await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, ex).ConfigureAwait(false);
             }
 
             return result;
+        }
+
+        private async Task ApplyFallbackTitlesAsync(string animeId, MetadataResult<Series> result, string desiredLanguage, Exception ex)
+        {
+            using var fallbackTitles = await Equals_check.XmlFindTitleById(animeId).ConfigureAwait(false);
+            if (fallbackTitles == null)
+            {
+                if (ex != null)
+                {
+                    _logger.LogWarning(ex, "Unable to find fallback title for {AnimeId}", animeId);
+                }
+                else
+                {
+                    _logger.LogWarning("Unable to find fallback title for {AnimeId}", animeId);
+                }
+
+                result.HasMetadata = false;
+                return;
+            }
+
+            var appliedTitles = await ApplyTitlesAsync(fallbackTitles, result.Item, desiredLanguage, true).ConfigureAwait(false);
+            if (!appliedTitles)
+            {
+                if (ex != null)
+                {
+                    _logger.LogWarning(ex, "Unable to find fallback title for {AnimeId}", animeId);
+                }
+                else
+                {
+                    _logger.LogWarning("Unable to find fallback title for {AnimeId}", animeId);
+                }
+
+                result.HasMetadata = false;
+            }
         }
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
