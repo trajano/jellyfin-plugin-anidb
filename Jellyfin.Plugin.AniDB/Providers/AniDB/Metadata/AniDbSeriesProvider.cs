@@ -68,8 +68,6 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             {"Character Design", PersonKind.Illustrator}
         };
 
-        private DateTime bannedLastDetected = DateTime.MinValue;
-
         public AniDbSeriesProvider(IApplicationPaths appPaths, ILogger<AniDbSeriesProvider> logger)
         {
             _appPaths = appPaths;
@@ -112,14 +110,13 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             var desiredLanguage = info.MetadataLanguage ?? "en";
             try
             {
-                var now = DateTime.UtcNow;
-                if (bannedLastDetected > now.AddHours(-2) && !HasExistingSeriesData(_appPaths, animeId))
+                if (Plugin.Instance.BannedRecently && !HasExistingSeriesData(_appPaths, animeId))
                 {
                     _logger.LogWarning("AniDB ban detected within the last 2 hours. Falling back to title-only metadata for {AnimeId}", animeId);
                     await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, null).ConfigureAwait(false);
                     return result;
                 }
-                if (bannedLastDetected > now.AddHours(-2)) 
+                if (Plugin.Instance.BannedRecently) 
                 {
                     _logger.LogInformation("AniDB ban detected within the last 2 hours, but existing meta data is present for {AnimeId}", animeId);
                 }
@@ -131,7 +128,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                 _logger.LogWarning(ex, "Failed to fetch AniDB series info for {AnimeId}", animeId);
                 if (ex.Message != null && ex.Message.IndexOf("<error code=\"500\">banned</error>", StringComparison.Ordinal) >= 0)
                 {
-                    bannedLastDetected = DateTime.UtcNow;
+                    Plugin.Instance.MarkBanned();
                 }
                 await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, ex).ConfigureAwait(false);
             }

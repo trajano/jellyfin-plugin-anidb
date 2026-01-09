@@ -46,11 +46,13 @@ namespace Jellyfin.Plugin.AniDB
         /// <summary>
         /// Checks if the ban is recent.
         /// </summary>
-        public bool RecentlyBanned()
+        private bool HasRecentBan()
         {
             // TODO get the time from configuration
             return bannedLastDetected > DateTime.UtcNow.AddHours(-2);
         }
+
+        public bool BannedRecently => HasRecentBan();
 
         /// <summary>
         /// Records the last time the plugin detected an AniDB ban.

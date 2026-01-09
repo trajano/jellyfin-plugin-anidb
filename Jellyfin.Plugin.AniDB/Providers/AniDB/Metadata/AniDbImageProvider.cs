@@ -26,8 +26,6 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
         private readonly IApplicationPaths _appPaths;
         private readonly ILogger<AniDbImageProvider> _logger;
 
-        private DateTime bannedLastDetected = DateTime.MinValue;
-
         public AniDbImageProvider(IApplicationPaths appPaths, ILogger<AniDbImageProvider> logger = null)
         {
             _appPaths = appPaths;
@@ -52,9 +50,8 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
         {
             var list = new List<RemoteImageInfo>();
 
-            var now = DateTime.UtcNow;
             if (!string.IsNullOrEmpty(aniDbId) && 
-                !(bannedLastDetected > now.AddHours(-2) && !AniDbSeriesProvider.HasExistingSeriesData(_appPaths, aniDbId)))
+                !(Plugin.Instance.BannedRecently && !AniDbSeriesProvider.HasExistingSeriesData(_appPaths, aniDbId)))
             {
                 try
                 {
@@ -74,7 +71,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                 {
                     if (ex.Message != null && ex.Message.IndexOf("<error code=\"500\">banned</error>", StringComparison.Ordinal) >= 0)
                     {
-                        bannedLastDetected = DateTime.UtcNow;
+                        Plugin.Instance.MarkBanned();
                     }
                     _logger.LogWarning(ex, "Failed to fetch AniDB image for {AniDbId}", aniDbId);
                 }

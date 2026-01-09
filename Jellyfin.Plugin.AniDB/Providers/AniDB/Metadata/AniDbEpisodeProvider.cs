@@ -21,8 +21,6 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
     {
         private readonly IServerConfigurationManager _configurationManager;
 
-        private DateTime bannedLastDetected = DateTime.MinValue;
-
         /// <summary>
         /// Creates a new instance of the <see cref="AniDbEpisodeProvider" /> class.
         /// </summary>
@@ -125,8 +123,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
         {
             try
             {
-                var now = DateTime.UtcNow;
-                if (bannedLastDetected > now.AddHours(-2) && !AniDbSeriesProvider.HasExistingSeriesData(_configurationManager.ApplicationPaths, seriesId))
+                if (Plugin.Instance.BannedRecently && !AniDbSeriesProvider.HasExistingSeriesData(_configurationManager.ApplicationPaths, seriesId))
                 {
                     return null;
                 }
@@ -137,7 +134,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             {
                 if (ex.Message != null && ex.Message.IndexOf("<error code=\"500\">banned</error>", StringComparison.Ordinal) >= 0)
                 {
-                    bannedLastDetected = DateTime.UtcNow;
+                    Plugin.Instance.MarkBanned();
                 }
                 return null;
             }
