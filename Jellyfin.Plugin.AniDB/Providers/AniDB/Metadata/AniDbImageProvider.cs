@@ -53,7 +53,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             var list = new List<RemoteImageInfo>();
 
             var now = DateTime.UtcNow;
-            var bannedAndSeriesDataDoesNotExist = bannedLastDetected > now.AddHours(-2) && await AniDbSeriesProvider.GetExistingSeriesData(_appPaths, aniDbId, cancellationToken) == null;
+            var bannedAndSeriesDataDoesNotExist = bannedLastDetected > now.AddHours(-2) && !AniDbSeriesProvider.HasExistingSeriesData(_appPaths, aniDbId);
             if (!string.IsNullOrEmpty(aniDbId) && !bannedAndSeriesDataDoesNotExist)
             {
                 try

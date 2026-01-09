@@ -95,7 +95,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             try
             {
                 var now = DateTime.UtcNow;
-                if (bannedLastDetected > now.AddHours(-2) && await GetExistingSeriesData(_appPaths, animeId, cancellationToken) == null)
+                if (bannedLastDetected > now.AddHours(-2) && !HasExistingSeriesData(_appPaths, animeId))
                 {
                     _logger.LogWarning("AniDB ban detected within the last 2 hours. Falling back to title-only metadata for {AnimeId}", animeId);
                     await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, null).ConfigureAwait(false);
@@ -225,7 +225,13 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             return await httpClient.GetAsync(url).ConfigureAwait(false);
         }
 
-        public static async Task<string> GetExistingSeriesData(IApplicationPaths appPaths, string seriesId, CancellationToken cancellationToken)
+        /// <summary>
+        /// Checks whether the cached series data file exists, is non-empty, and is not stale.
+        /// </summary>
+        /// <param name="appPaths">The application paths.</param>
+        /// <param name="seriesId">The AniDB series identifier.</param>
+        /// <returns>True when valid cached series data is present; otherwise false.</returns>
+        public static bool HasExistingSeriesData(IApplicationPaths appPaths, string seriesId)
         {
             var dataPath = GetSeriesDataPath(appPaths, seriesId);
             var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
@@ -234,12 +240,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             var isEmpty = fileInfo.Exists && fileInfo.Length == 0;
             var isStale = fileInfo.Exists && DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromDays(Plugin.Instance.Configuration.MaxCacheAge);
 
-            if (!fileInfo.Exists || isEmpty || isStale)
-            {
-                return null;
-            }
-
-            return seriesDataPath;
+            return fileInfo.Exists && !isEmpty && !isStale;
         }
 
         public static async Task<string> GetSeriesData(IApplicationPaths appPaths, string seriesId, CancellationToken cancellationToken)
