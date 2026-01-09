@@ -40,6 +40,7 @@ namespace Jellyfin.Plugin.AniDB.Configuration
             AniDbRateLimit = 2000;
             MaxCacheAge = 7;
             AniDbReplaceGraves = true;
+            RecentBanSeconds = 2 * 60 * 60;
         }
 
         public TitlePreferenceType TitlePreference { get; set; }
@@ -63,5 +64,14 @@ namespace Jellyfin.Plugin.AniDB.Configuration
         public int MaxCacheAge { get; set; }
 
         public bool AniDbReplaceGraves { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of seconds a detected ban is considered recent.
+        /// </summary>
+        /// <remarks>
+        /// When a ban is recent, requests that would hit httpapi without cached data are skipped.
+        /// The UI is expected to convert hours to seconds.
+        /// </remarks>
+        public int RecentBanSeconds { get; set; }
     }
 }
