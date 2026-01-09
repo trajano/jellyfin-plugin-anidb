@@ -21,6 +21,8 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
     {
         private readonly IServerConfigurationManager _configurationManager;
 
+        private DateTime bannedLastDetected = DateTime.MinValue;
+
         /// <summary>
         /// Creates a new instance of the <see cref="AniDbEpisodeProvider" /> class.
         /// </summary>
@@ -121,8 +123,24 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 
         private async Task<string> FindSeriesFolder(string seriesId, CancellationToken cancellationToken)
         {
-            var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, seriesId, cancellationToken).ConfigureAwait(false);
-            return Path.GetDirectoryName(seriesDataPath);
+            try
+            {
+                var now = DateTime.UtcNow;
+                if (bannedLastDetected > now.AddHours(-2))
+                {
+                    return null;
+                }
+                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_configurationManager.ApplicationPaths, seriesId, cancellationToken).ConfigureAwait(false);
+                return Path.GetDirectoryName(seriesDataPath);
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message != null && ex.Message.IndexOf("<error code=\"500\">banned</error>", StringComparison.Ordinal) >= 0)
+                {
+                    bannedLastDetected = DateTime.UtcNow;
+                }
+                return null;
+            }
         }
 
         private async Task ParseEpisodeXml(FileInfo xml, Episode episode, string preferredMetadataLanguage)
