@@ -97,10 +97,12 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                 var fallbackTitle = await Equals_check.XmlFindTitleById(animeId, desiredLanguage).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(fallbackTitle))
                 {
+                    _logger.LogWarning(ex, "Unable to find fallback title for {AnimeId}", animeId);
                     result.HasMetadata = false;
                 }
                 else
                 {
+                    _logger.LogInformation(ex, "Using fallback title {FallbackTitle} for {AnimeId}", fallbackTitle, animeId);
                     result.Item.Name = fallbackTitle;
                 }
             }
