@@ -49,8 +49,12 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             268, // warthog
             269, // python
             289, // string necklace
+            1760, // bishounen
+            2391, // bishoujo
             2624, // present (time)
+            2625, // past (time)
             2628, // fictional location
+            2630, // Earth
             2790, // plot continuity
             2791, // stereotypes
         };
