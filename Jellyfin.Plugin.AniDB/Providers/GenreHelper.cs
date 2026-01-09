@@ -57,7 +57,7 @@ namespace Jellyfin.Plugin.AniDB.Providers
             {"Zombie", "Supernatural"},
         };
 
-        private static readonly string[] GenresAsTags =
+        private static readonly HashSet<string> GenresAsTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "Hentai",
             "Space",
@@ -241,12 +241,13 @@ namespace Jellyfin.Plugin.AniDB.Providers
                 }
                 else
                 {
-                    genres.Add(genre);
+                    // If it is not mapped add is as a tag to prevent flooding of the Genre list
+                    tags.Add(genre);
                 }
 
                 if (GenresAsTags.Contains(genre))
                 {
-                    genres.Add(genre);
+                    tags.Add(genre);
                 }
             }
 
