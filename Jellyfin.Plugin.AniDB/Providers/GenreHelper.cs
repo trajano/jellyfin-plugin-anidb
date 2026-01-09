@@ -59,6 +59,7 @@ namespace Jellyfin.Plugin.AniDB.Providers
 
         private static readonly HashSet<string> GenresAsTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
+            "Absurdist humour",
             "Hentai",
             "Space",
             "Weltraum",
