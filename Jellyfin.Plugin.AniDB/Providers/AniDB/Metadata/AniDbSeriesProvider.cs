@@ -95,7 +95,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             try
             {
                 var now = DateTime.UtcNow;
-                if (bannedLastDetected > now.AddHours(-2))
+                if (bannedLastDetected > now.AddHours(-2) && await GetExistingSeriesData(_appPaths, animeId, cancellationToken) == null)
                 {
                     _logger.LogWarning("AniDB ban detected within the last 2 hours. Falling back to title-only metadata for {AnimeId}", animeId);
                     await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, null).ConfigureAwait(false);
@@ -219,6 +219,23 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             var httpClient = Plugin.Instance.GetHttpClient();
 
             return await httpClient.GetAsync(url).ConfigureAwait(false);
+        }
+
+        private async Task<string> GetExistingSeriesData(IApplicationPaths appPaths, string seriesId, CancellationToken cancellationToken)
+        {
+            var dataPath = GetSeriesDataPath(appPaths, seriesId);
+            var seriesDataPath = Path.Combine(dataPath, SeriesDataFile);
+            var fileInfo = new FileInfo(seriesDataPath);
+
+            var isEmpty = fileInfo.Exists && fileInfo.Length == 0;
+            var isStale = fileInfo.Exists && DateTime.UtcNow - fileInfo.LastWriteTimeUtc > TimeSpan.FromDays(Plugin.Instance.Configuration.MaxCacheAge);
+
+            if (!fileInfo.Exists || isEmpty || isStale)
+            {
+                return null;
+            }
+
+            return seriesDataPath;
         }
 
         public static async Task<string> GetSeriesData(IApplicationPaths appPaths, string seriesId, CancellationToken cancellationToken)
