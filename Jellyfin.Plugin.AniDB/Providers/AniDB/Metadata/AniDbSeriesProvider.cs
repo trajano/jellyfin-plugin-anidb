@@ -120,15 +120,17 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             var desiredLanguage = info.MetadataLanguage ?? "en";
             try
             {
-                if (Plugin.Instance.BannedRecently && !HasExistingSeriesData(_appPaths, animeId))
+                if (Plugin.Instance.BannedRecently)
                 {
-                    _logger.LogWarning("AniDB ban detected within the last 2 hours. Falling back to title-only metadata for {AnimeId}", animeId);
-                    await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, null).ConfigureAwait(false);
-                    return result;
-                }
-                if (Plugin.Instance.BannedRecently) 
-                {
-                    _logger.LogInformation("AniDB ban detected within the last 2 hours, but existing meta data is present for {AnimeId}", animeId);
+                    var banWindowText = FormatBanWindow(Plugin.Instance.Configuration.RecentBanSeconds);
+                    if (!HasExistingSeriesData(_appPaths, animeId))
+                    {
+                        _logger.LogWarning("AniDB ban detected within the last {BanWindow}. Falling back to title-only metadata for {AnimeId}", banWindowText, animeId);
+                        await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, null).ConfigureAwait(false);
+                        return result;
+                    }
+
+                    _logger.LogInformation("AniDB ban detected within the last {BanWindow}, but existing meta data is present for {AnimeId}", banWindowText, animeId);
                 }
                 var seriesDataPath = await GetSeriesData(_appPaths, animeId, cancellationToken);
                 await FetchSeriesInfo(result, seriesDataPath, desiredLanguage).ConfigureAwait(false);
@@ -144,6 +146,34 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             }
 
             return result;
+        }
+
+        private static string FormatBanWindow(int seconds)
+        {
+            if (seconds <= 0)
+            {
+                return "0 seconds";
+            }
+
+            if (seconds % 86400 == 0)
+            {
+                var days = seconds / 86400;
+                return days == 1 ? "1 day" : $"{days} days";
+            }
+
+            if (seconds % 3600 == 0)
+            {
+                var hours = seconds / 3600;
+                return hours == 1 ? "1 hour" : $"{hours} hours";
+            }
+
+            if (seconds % 60 == 0)
+            {
+                var minutes = seconds / 60;
+                return minutes == 1 ? "1 minute" : $"{minutes} minutes";
+            }
+
+            return seconds == 1 ? "1 second" : $"{seconds} seconds";
         }
 
         private async Task ApplyFallbackTitlesAsync(string animeId, MetadataResult<Series> result, string desiredLanguage, Exception ex)
