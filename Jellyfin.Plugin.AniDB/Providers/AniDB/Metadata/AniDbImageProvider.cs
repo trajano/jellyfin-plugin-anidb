@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -14,6 +15,8 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 {
@@ -21,10 +24,12 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
     {
         public string Name => "AniDB";
         private readonly IApplicationPaths _appPaths;
+        private readonly ILogger<AniDbImageProvider> _logger;
 
-        public AniDbImageProvider(IApplicationPaths appPaths)
+        public AniDbImageProvider(IApplicationPaths appPaths, ILogger<AniDbImageProvider> logger = null)
         {
             _appPaths = appPaths;
+            _logger = logger ?? NullLogger<AniDbImageProvider>.Instance;
         }
 
         public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
@@ -47,16 +52,23 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 
             if (!string.IsNullOrEmpty(aniDbId))
             {
-                var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, aniDbId, cancellationToken);
-                var imageUrl = await FindImageUrl(seriesDataPath).ConfigureAwait(false);
-
-                if (!string.IsNullOrEmpty(imageUrl))
+                try
                 {
-                    list.Add(new RemoteImageInfo
+                    var seriesDataPath = await AniDbSeriesProvider.GetSeriesData(_appPaths, aniDbId, cancellationToken);
+                    var imageUrl = await FindImageUrl(seriesDataPath).ConfigureAwait(false);
+
+                    if (!string.IsNullOrEmpty(imageUrl))
                     {
-                        ProviderName = Name,
-                        Url = imageUrl
-                    });
+                        list.Add(new RemoteImageInfo
+                        {
+                            ProviderName = Name,
+                            Url = imageUrl
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to fetch AniDB image for {AniDbId}", aniDbId);
                 }
             }
 
