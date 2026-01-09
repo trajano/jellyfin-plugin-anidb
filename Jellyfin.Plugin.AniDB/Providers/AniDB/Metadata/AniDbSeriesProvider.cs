@@ -101,6 +101,10 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                     await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, null).ConfigureAwait(false);
                     return result;
                 }
+                if (bannedLastDetected > now.AddHours(-2)) 
+                {
+                    _logger.LogInformation("AniDB ban detected within the last 2 hours, but existing meta data is present for {AnimeId}", animeId);
+                }
                 var seriesDataPath = await GetSeriesData(_appPaths, animeId, cancellationToken);
                 await FetchSeriesInfo(result, seriesDataPath, desiredLanguage).ConfigureAwait(false);
             }
