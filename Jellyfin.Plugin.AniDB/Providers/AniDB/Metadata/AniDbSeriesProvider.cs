@@ -47,6 +47,8 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             {"Original Work", PersonKind.Creator}
         };
 
+        private DateTime bannedLastDetected = DateTime.MinValue;
+
         public AniDbSeriesProvider(IApplicationPaths appPaths, ILogger<AniDbSeriesProvider> logger)
         {
             _appPaths = appPaths;
