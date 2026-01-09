@@ -9,7 +9,7 @@ namespace Jellyfin.Plugin.AniDB.Providers
 {
     public static class GenreHelper
     {
-        private static readonly Dictionary<string, string> GenreMappings = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> GenreMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {"Action", "Action"},
             {"Advanture", "Adventure"},
