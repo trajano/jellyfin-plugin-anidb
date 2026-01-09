@@ -33,7 +33,7 @@ namespace Jellyfin.Plugin.AniDB.Providers
             {"Horror", "Horror"},
             {"Magic", "Fantasy"},
             {"Martial Arts", "Action"},
-            {"Mahou Shoujo", "Fantasy"},
+            {"Magical Girl", "Fantasy"},
             {"Mecha", "Science Fiction"},
             {"Music", "Music"},
             {"Mystery", "Mystery"},
