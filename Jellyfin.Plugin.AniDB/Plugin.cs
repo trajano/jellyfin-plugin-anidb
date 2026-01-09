@@ -16,6 +16,8 @@ namespace Jellyfin.Plugin.AniDB
     public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         IHttpClientFactory _httpClientFactory;
+        private DateTime bannedLastDetected = DateTime.MinValue;
+
         public Plugin(
             IApplicationPaths applicationPaths,
             IXmlSerializer xmlSerializer,
@@ -38,6 +40,24 @@ namespace Jellyfin.Plugin.AniDB
                 new ProductInfoHeaderValue(Name, Version.ToString()));
 
             return httpClient;
+        }
+
+
+        /// <summary>
+        /// Checks if the ban is recent.
+        /// </summary>
+        public bool RecentlyBanned()
+        {
+            // TODO get the time from configuration
+            return bannedLastDetected > DateTime.UtcNow.AddHours(-2);
+        }
+
+        /// <summary>
+        /// Records the last time the plugin detected an AniDB ban.
+        /// </summary>
+        public void MarkBanned()
+        {
+            bannedLastDetected = DateTime.UtcNow;
         }
 
         /// <inheritdoc />
