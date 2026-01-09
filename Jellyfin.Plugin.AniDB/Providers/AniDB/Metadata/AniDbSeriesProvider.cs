@@ -51,6 +51,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             289, // string necklace
             2624, // present (time)
             2628, // fictional location
+            2790, // plot continuity
         };
         private static readonly Regex AniDbUrlRegex = new Regex(@"https?://anidb.net/\w+(/[0-9]+)? \[(?<name>[^\]]*)\]", RegexOptions.Compiled);
         private static readonly Regex _errorRegex = new(@"<error code=""[0-9]+"">[a-zA-Z]+</error>", RegexOptions.Compiled);
