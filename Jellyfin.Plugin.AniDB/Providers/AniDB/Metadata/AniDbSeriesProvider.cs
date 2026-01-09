@@ -44,7 +44,9 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             {"Production", PersonKind.Producer},
             {"Chief Animation Direction", PersonKind.Director},
             {"Original Work", PersonKind.Creator},
-            {"Character Design", PersonKind.Creator}
+            {"Original Character Design", PersonKind.Creator},
+            {"Series Composition", PersonKind.Writer},
+            {"Character Design", PersonKind.Illustrator}
         };
 
         public AniDbSeriesProvider(IApplicationPaths appPaths)
