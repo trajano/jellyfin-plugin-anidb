@@ -51,6 +51,7 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             289, // string necklace
             1760, // bishounen
             2391, // bishoujo
+            2604, // content indicators
             2624, // present (time)
             2625, // past (time)
             2628, // fictional location
