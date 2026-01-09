@@ -33,7 +33,23 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 
         // AniDB has very low request rate limits, a minimum of 2 seconds between requests, and an average of 4 seconds between requests
         public static readonly RateLimiter RequestLimiter = new RateLimiter(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(5));
-        private static readonly int[] IgnoredTagIds = { 6, 22, 23, 60, 128, 129, 185, 216, 242, 255, 268, 269, 289 };
+        private static readonly int[] IgnoredTagIds = 
+        {
+            6, // supernatural abilities
+            22, // organisation
+            23, // *unknown*
+            30, // maintenance tags
+            60, // capoeira,
+            128, // slingshot
+            129, // wedding dress
+            185, // extreme speed 
+            216, // minotaur
+            242, // halberd,
+            255, // recording director
+            268, // warthog
+            269, // python
+            289, // string necklace
+        };
         private static readonly Regex AniDbUrlRegex = new Regex(@"https?://anidb.net/\w+(/[0-9]+)? \[(?<name>[^\]]*)\]", RegexOptions.Compiled);
         private static readonly Regex _errorRegex = new(@"<error code=""[0-9]+"">[a-zA-Z]+</error>", RegexOptions.Compiled);
         private readonly IApplicationPaths _appPaths;
@@ -47,7 +63,9 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
             {"Production", PersonKind.Producer},
             {"Chief Animation Direction", PersonKind.Director},
             {"Original Work", PersonKind.Creator},
-            {"Character Design", PersonKind.Creator}
+            {"Original Character Design", PersonKind.Creator},
+            {"Series Composition", PersonKind.Writer},
+            {"Character Design", PersonKind.Illustrator}
         };
 
         private DateTime bannedLastDetected = DateTime.MinValue;
