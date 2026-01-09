@@ -487,47 +487,66 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "resource")
                 {
                     var type = reader.GetAttribute("type");
-                    switch (type)
+                    using (var resourceSubtree = reader.ReadSubtree())
                     {
-                        case "4":
-                            while (reader.Read())
-                            {
-                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "url")
-                                {
-                                    await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
-                                    break;
-                                }
-                            }
-                            break;
-                        case "43": // IMDb
-                            while (reader.Read())
-                            {
-                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
-                                {
-                                    var imdbId = reader.ReadElementContentAsString();
-                                    if (!string.IsNullOrEmpty(imdbId))
-                                    {
-                                        series.ProviderIds[ProviderNames.IMDb] = imdbId;
-                                    }
-                                }
-                            }
-                            break;
-                        case "44": // TheMovieDb
-                            while (reader.Read())
-                            {
-                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
-                                {
-                                    var theMovieDbId = reader.ReadElementContentAsString();
-                                    if (!string.IsNullOrEmpty(theMovieDbId) && theMovieDbId != "tv")
-                                    {
-                                        series.ProviderIds[ProviderNames.TheMovieDb] = theMovieDbId;
-                                        // break after finding the first one.
-                                        break;
-                                    }
-                                }
-                            }
-                            break;
+                        await resourceSubtree.ReadAsync().ConfigureAwait(false);
+                        switch (type)
+                        {
+                            case "4": // Official URL
+                                await ParseOfficialUrlResource(resourceSubtree).ConfigureAwait(false);
+                                break;
+                            case "43": // IMDb
+                                await ParseImdbResource(series, resourceSubtree).ConfigureAwait(false);
+                                break;
+                            case "44": // TheMovieDb
+                                await ParseTheMovieDbResource(series, resourceSubtree).ConfigureAwait(false);
+                                break;
+                        }
                     }
+                }
+            }
+        }
+
+        private static async Task ParseOfficialUrlResource(XmlReader reader)
+        {
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "url")
+                {
+                    await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
+                    break;
+                }
+            }
+        }
+
+        private static async Task ParseImdbResource(Series series, XmlReader reader)
+        {
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
+                {
+                    var imdbId = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(imdbId))
+                    {
+                        series.ProviderIds[ProviderNames.IMDb] = imdbId;
+                    }
+                    break;
+                }
+            }
+        }
+
+        private static async Task ParseTheMovieDbResource(Series series, XmlReader reader)
+        {
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
+                {
+                    var theMovieDbId = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(theMovieDbId) && theMovieDbId != "tv")
+                    {
+                        series.ProviderIds[ProviderNames.TheMovieDb] = theMovieDbId;
+                    }
+                    break;
                 }
             }
         }
