@@ -125,12 +125,12 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
                     var banWindowText = FormatBanWindow(Plugin.Instance.Configuration.RecentBanSeconds);
                     if (!HasExistingSeriesData(_appPaths, animeId))
                     {
-                        _logger.LogWarning("AniDB ban detected within the last {BanWindow}. Falling back to title-only metadata for {AnimeId}", banWindowText, animeId);
+                        _logger.LogWarning("AniDB ban detected within the last {BanWindow}. Falling back to title-only metadata for https://anidb.net/anime/{AnimeId}", banWindowText, animeId);
                         await ApplyFallbackTitlesAsync(animeId, result, desiredLanguage, null).ConfigureAwait(false);
                         return result;
                     }
 
-                    _logger.LogInformation("AniDB ban detected within the last {BanWindow}, but existing meta data is present for {AnimeId}", banWindowText, animeId);
+                    _logger.LogInformation("AniDB ban detected within the last {BanWindow}, but existing meta data is present for https://anidb.net/anime/{AnimeId}", banWindowText, animeId);
                 }
                 var seriesDataPath = await GetSeriesData(_appPaths, animeId, cancellationToken);
                 await FetchSeriesInfo(result, seriesDataPath, desiredLanguage).ConfigureAwait(false);
