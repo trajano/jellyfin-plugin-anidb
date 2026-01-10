@@ -2771,17 +2771,27 @@ namespace Jellyfin.Plugin.AniDB.Providers.AniDB.Metadata
 
         private static async Task ParseTheMovieDbResource(Series series, XmlReader reader)
         {
+            string theMovieDbId = null;
+            string theMovieDbType = null;
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "identifier")
                 {
-                    var theMovieDbId = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
-                    if (!string.IsNullOrEmpty(theMovieDbId) && theMovieDbId != "tv")
+                    if (theMovieDbId == null)
                     {
-                        series.ProviderIds[ProviderNames.TheMovieDb] = theMovieDbId;
+                        theMovieDbId = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
                     }
-                    break;
+                    else
+                    {
+                        theMovieDbType = await reader.ReadElementContentAsStringAsync().ConfigureAwait(false);
+                        break;
+                    }
                 }
+            }
+
+            if (!string.IsNullOrEmpty(theMovieDbId) && string.Equals(theMovieDbType, "tv", StringComparison.OrdinalIgnoreCase))
+            {
+                series.ProviderIds[ProviderNames.TheMovieDb] = theMovieDbId;
             }
         }
 
